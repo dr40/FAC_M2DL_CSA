@@ -8,7 +8,8 @@ namespace SmartHome
     /// <summary>
     /// Represent a room of the SmartHome
     /// </summary>
-    public class Piece
+    /// <remarks>Authors: Dorian RODDE, Vivian RODDE</remarks>
+    public class Room
     {
 
         ///////////////////////////////////////////////////////////////////////////////////////////
@@ -16,21 +17,25 @@ namespace SmartHome
         ///////////////////////////////////////////////////////////////////////////////////////////
 
         /// <summary>
-        /// Name of the Piece
+        /// Unique identifier of this room
+        /// </summary>
+        public int Id { get; protected set; }
+        /// <summary>
+        /// Name of this room
         /// </summary>
         public string Nom { get; protected set; }
         /// <summary>
-        /// Light on/off state of the room
+        /// Light on/off state of this room
         /// </summary>
         /// <remarks>Returns true if the light is on</remarks>
         public bool LumiereAllumer {get; protected set;}
         /// <summary>
-        /// Door locked/unlocked state of the room
+        /// Door locked/unlocked state of this room
         /// </summary>
         /// <remarks>Returns true if the door is lock</remarks>
         public bool PorteDeverrouiller {get; protected set;}
         /// <summary>
-        /// Flap opened/closed state of the room
+        /// Flap opened/closed state of this room
         /// </summary>
         /// <remarks>Returns true if the flap is open</remarks>
         public bool VoletOuvert {get; protected set;}
@@ -49,39 +54,76 @@ namespace SmartHome
         /// </summary>
         /// <remarks>Returns true if this room have flap</remarks>
         public bool AVolet {get; protected set;}
-
+        /// <summary>
+        /// Indicate that this home element have been just added
+        /// </summary>
+        public bool IsNewOne { get; protected set; }
 
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Initialize
         ///////////////////////////////////////////////////////////////////////////////////////////
 
         /// <summary>
+        /// Private contrusctor used to initialize class members
+        /// </summary>
+        private Room() {
+            Nom = "";
+            LumiereAllumer = false;
+            PorteDeverrouiller = false;
+            VoletOuvert = false;
+            ALumiere = false;
+            APorte = false;
+            AVolet = false;
+            IsNewOne = true;
+        }
+        /// <summary>
         /// Create a room from a JSON Object. (cf. doc serveur web.pdf) 
         /// </summary>
         /// <param name="json">JSON object to read</param>
-        public Piece(JSON json) {
-            Nom = WebUtility.HtmlDecode(json.Get("nom").GetStringValue(Nom));
-            LumiereAllumer = json.Get("lumiereAllumee").GetBoolValue(LumiereAllumer);
-            PorteDeverrouiller = !(json.Get("porteVerrouillee").GetBoolValue(PorteDeverrouiller));
-            VoletOuvert = json.Get("voletOuvert").GetBoolValue(VoletOuvert);
-            ALumiere = json.Get("aLumiere").GetBoolValue(ALumiere);
-            APorte = json.Get("aPorte").GetBoolValue(APorte);
-            AVolet = json.Get("aVolet").GetBoolValue(AVolet);
+        public Room(JSON json) 
+            : this() 
+        {
+            Id = json.Get("id").GetIntValue(-1);
+            Refresh(json);
+            IsNewOne = true;
         }
+
 
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Refresh
         ///////////////////////////////////////////////////////////////////////////////////////////
 
         /// <summary>
-        /// Refresh the room from a JSON Object. (cf. doc serveur web.pdf)
+        /// Refresh this room from a JSON Object. (cf. doc serveur web.pdf)
         /// </summary>
         /// <param name="json">JSON object to read</param>
         public void Refresh(JSON json) {
+            Nom = StringUtils.UTF8ToASCII(WebUtility.HtmlDecode(json.Get("nom").GetStringValue(Nom)));
             LumiereAllumer = json.Get("lumiereAllumee").GetBoolValue(LumiereAllumer);
             PorteDeverrouiller = !(json.Get("porteVerrouillee").GetBoolValue(PorteDeverrouiller));
             VoletOuvert = json.Get("voletOuvert").GetBoolValue(VoletOuvert);
+            ALumiere = json.Get("aLumiere").GetBoolValue(ALumiere);
+            APorte = json.Get("aPorte").GetBoolValue(APorte);
+            AVolet = json.Get("aVolet").GetBoolValue(AVolet);
+            IsNewOne = false;
         }
+
+
+        ///////////////////////////////////////////////////////////////////////////////////////////
+        // Compare
+        ///////////////////////////////////////////////////////////////////////////////////////////
+
+        /// <summary>
+        /// Compare this room to another one, and check if there are identical.
+        /// </summary>
+        /// <param name="r">Room to compare to</param>
+        /// <returns>True if identical</returns>
+        public bool isEgalTo(Room r) {
+            return ((string.Compare(Nom, r.Nom) == 0)
+                && (LumiereAllumer == r.LumiereAllumer) && (PorteDeverrouiller == r.PorteDeverrouiller) && (VoletOuvert == r.VoletOuvert)
+                && (ALumiere == r.ALumiere) && (APorte == r.APorte) && (AVolet == r.AVolet));
+        }
+
 
         ///////////////////////////////////////////////////////////////////////////////////////////
         // ToString 
@@ -92,8 +134,7 @@ namespace SmartHome
         /// </summary>
         /// <returns>String representation of this room</returns>
         override public string ToString() {
-            string m = Nom;
-            m += ":";
+            string m = "piece [" + Id + "," + Nom + "]:";
             if (ALumiere) {
                 m += " lumiere=" + ((LumiereAllumer ? "allumer" : "eteint"));
             }

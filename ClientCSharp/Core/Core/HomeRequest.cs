@@ -6,9 +6,10 @@ using System.Text;
 namespace SmartHome
 {
     /// <summary>
-    /// Message composer. Use user-defined parameters to produce a message ready to send
+    /// Home request composer. Use user-defined parameters to produce a message ready to send
     /// </summary>
-    public class Message
+    /// <remarks>Authors: Dorian RODDE, Vivian RODDE</remarks>
+    public class HomeRequest
     {
 
         ///////////////////////////////////////////////////////////////////////////////////////////
@@ -28,16 +29,16 @@ namespace SmartHome
         /// <summary>
         /// Create an empty message
         /// </summary>
-        public Message() {
+        public HomeRequest() {
             _params = new Dictionary<string,string>();
         }
         /// <summary>
         /// Read a message from a string, formatted like URL parameters.
         /// </summary>
         /// <remarks></remarks>
-        /// <param name="message"></param>
-        public Message(string message) {
-            ExplodeHTTPRequest(message);
+        /// <param name="request"></param>
+        public HomeRequest(string request) {
+            ExplodeHTTPRequest(request);
         }
 
 
@@ -62,8 +63,10 @@ namespace SmartHome
         /// <summary>
         /// Clear all parameters defined
         /// </summary>
-        public void Clear() {
+        /// <returns>This object to enable chained call (example: msg.Clear().Set("done","ok");)</returns>
+        public HomeRequest Clear() {
             _params.Clear();
+            return this;
         }
         /// <summary>
         /// Modify or Add an parameters
@@ -71,7 +74,7 @@ namespace SmartHome
         /// <param name="name">Name of the parameter to change or create</param>
         /// <param name="value">Value of the parameter</param>
         /// <returns>This object to enable chained call (example: msg.Set("test","42").Set("done","ok");)</returns>
-        public Message Set(string name, string value = "") {
+        public HomeRequest Set(string name, string value = "") {
             if (_params.ContainsKey(name)) {
                 _params[name] = value.Trim();
             } else {
@@ -80,21 +83,68 @@ namespace SmartHome
             return this;
         }
         /// <summary>
-        /// Get a parameter value
+        /// Remove a parameter
+        /// </summary>
+        /// <param name="name">Name of the desired parameter</param>
+        /// <returns>This object to enable chained call (example: msg.Remove("test").Set("done","ok");)</returns>
+        public HomeRequest Remove(string name) {
+            if (_params.ContainsKey(name)) {
+                _params.Remove(name);
+            }
+            return this;
+        }
+        /// <summary>
+        /// Get a parameter value by name
         /// </summary>
         /// <param name="name">Name of the desired parameter</param>
         /// <returns>Value of the parameter</returns>
         public string Get(string name) {
-            return _params[name];
+            if (_params.ContainsKey(name)) {
+                return _params[name];
+            } else {
+                return "";
+            }
         }
         /// <summary>
-        /// Remove a parameter
+        /// Get a parameter value by id
         /// </summary>
-        /// <param name="name">Name of the desired parameter</param>
-        public void Remove(string name) {
-            _params.Remove(name);
+        /// <param name="id">Id of the desired parameter</param>
+        /// <returns>Value of the parameter</returns>
+        public string Get(int id) {
+            if ((id >= 0) && (id < _params.Count)) {
+                foreach (KeyValuePair<string, string> pair in _params) {
+                    if (id == 0) return pair.Value;
+                    id--;
+                }
+                return "";
+            } else {
+                return "";
+            }
         }
-
+        /// <summary>
+        /// Get a parameter name
+        /// </summary>
+        /// <param name="id">Id of the desired parameter</param>
+        /// <returns></returns>
+        public string GetName(int id) {
+            if ((id >= 0) && (id < _params.Count)) {
+                foreach (KeyValuePair<string, string> pair in _params) {
+                    if (id == 0) return pair.Key;
+                    id--;
+                }
+                return "";
+            } else {
+                return "";
+            }
+        }
+        /// <summary>
+        /// Get the number of parameters
+        /// </summary>
+        public int Count {
+            get {
+                return _params.Count;
+            }
+        }
 
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Convert functions

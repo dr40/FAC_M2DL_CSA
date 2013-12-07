@@ -4,12 +4,13 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Threading;
-using SmartHome;
 
-namespace TextViewClient
+namespace SmartHome
 {
+#if TEST
+
     /// <summary>
-    /// C# client of SmartHome, provide text feedback of home.
+    /// Test of SmartHome library
     /// </summary>
     class Program
     {
@@ -17,7 +18,7 @@ namespace TextViewClient
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Members
         ///////////////////////////////////////////////////////////////////////////////////////////
-
+    
 #if TEST_LOCAL
         /// <summary>
         /// Server location
@@ -32,7 +33,7 @@ namespace TextViewClient
         /// <summary>
         /// Identifier used by server
         /// </summary>
-        const string IDENTIFIER = "sharp"; /* webapp */
+        const string IDENTIFIER = "csharp_test"; //"synthese";
         /// <summary>
         /// Home refresh frequency
         /// </summary>
@@ -50,7 +51,7 @@ namespace TextViewClient
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Home
         ///////////////////////////////////////////////////////////////////////////////////////////
-       
+
         /// <summary>
         /// Home loop
         /// </summary>
@@ -117,7 +118,9 @@ namespace TextViewClient
                 s = "La liste des chansons à changé";
                 s2 = h.Hifi.ToString();
             }
-            System.Console.WriteLine(s);
+            if (s.Length > 0) {
+                System.Console.WriteLine(s);
+            }
             if (s2.Length > 0) {
                 System.Console.WriteLine(s2);
             }
@@ -131,8 +134,11 @@ namespace TextViewClient
         static void AlarmClockUpdate(Home h, AlarmClock a, Home.AlarmClockUpdateKind act) {
             string s = "";
             if (act == Home.AlarmClockUpdateKind.AlarmClockRing) {
+                System.Console.WriteLine(h.Reveils.Get("Test"));
                 s = "Sonnerie activer: " + a.Name;
             } else if (act == Home.AlarmClockUpdateKind.AlarmClockUpdated) {
+                System.Console.WriteLine(h.Reveils.Get(a.Id));
+                System.Console.WriteLine(a);
                 s = "Réveils modifier: " + a.Name;
             } else if (act == Home.AlarmClockUpdateKind.NewAlarmClockSet) {
                 s = "Reveils added : " + a.ToString();
@@ -168,7 +174,6 @@ namespace TextViewClient
         }
 
 
-
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Main
         ///////////////////////////////////////////////////////////////////////////////////////////
@@ -176,7 +181,7 @@ namespace TextViewClient
         /// <summary>
         /// Entry point
         /// </summary>
-        /// <param name="args">List of arguments passed to the program</param>
+        /// <param name="args">Arguments gived to program</param>
         static void Main(string[] args) {
             /* Initialize Home */
             home = new Home(SERVER_URI, IDENTIFIER, SERVER_REFRESH_FREQUENCY);
@@ -184,15 +189,23 @@ namespace TextViewClient
             home.RegisterEvent(HomeUpdate);
             home.RegisterEvent(RoomUpdate);
             home.RegisterEvent(AlarmClockUpdate);
-            home.RegisterEvent(HifiUpdate);
             home.RegisterEvent(ActionReceived);
+            home.RegisterEvent(HifiUpdate);
+            System.Console.WriteLine(home.ToString());
             running = true;
             /* Run Home thread */
             Thread homeThread = new Thread(HomeThread);
             homeThread.Start();
-            System.Console.WriteLine(home.Hifi.RemoveSong(home.Hifi.GetSong("rust in peace")));
+            System.Console.WriteLine(home.ToString());
+
+            //System.Console.WriteLine(home.Actions.SendAction("synthese", "test", "p1", "p2", "p3", "param 5", "Les actions fonctionnent correctement", "Youpi!!!"));
+            //System.Console.WriteLine(home.Actions.SendAction("synthese", "test Youpi!!!"));
+            //WeatherAction wa = new WeatherAction(WeatherAction.ActionType.GET_WEATHER, 5);
+            //wa.Execute(home);
+            //home.Actions.SendAction("webapp", "trafic", "2");
+            //running = false;
             /* Run a loop that wait User action */
-            System.Console.WriteLine(">> Les actions effectuées sur la maison s'inscriront ici");
+            System.Console.WriteLine(">> Les actions effectuées sur la maison seront lues et s'inscriront ici");
             System.Console.WriteLine(">> Pour quitter appuyer sur 'q'");
             while (running) {
                 ConsoleKeyInfo key = System.Console.ReadKey();
@@ -202,5 +215,7 @@ namespace TextViewClient
             }
         }
 
+
     }
+#endif
 }

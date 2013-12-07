@@ -7,6 +7,7 @@ namespace SmartHome
     /// <summary>
     /// JSON reader
     /// </summary>
+    /// <remarks>Authors: Dorian RODDE</remarks>
     public class JSON
     {
 
@@ -192,6 +193,19 @@ namespace SmartHome
             return this;
         }
         /// <summary>
+        /// Check if this JSON object contains a child by name
+        /// </summary>
+        /// <param name="name">Name of the desired child</param>
+        /// <returns>True if child exist</returns>
+        public bool Contains(string name) {
+            foreach (JSON c in _childs) {
+                if (string.Compare(c.Name, name) == 0) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        /// <summary>
         /// Get child count
         /// </summary>
         /// <remarks>Concern only JSON Object and JSON Array, since other type cannot have child (cf. json specification)</remarks>
@@ -214,7 +228,7 @@ namespace SmartHome
         /// <returns>Boolean value of this JSON Object Or defaultValue</returns>
         public bool GetBoolValue(bool defaultValue = false) {
             if (Type != ValueType.EMPTY) {
-                return (string.Compare(Value, "true", true) == 0);
+                return ((string.Compare(Value, "true", true) == 0) || (string.Compare(Value, "1", true) == 0));
             } else {
                 return defaultValue;
             }
@@ -227,7 +241,7 @@ namespace SmartHome
         public int GetIntValue(int defaultValue = 0) {
             if (Type != ValueType.EMPTY) {
                 try {
-                    return int.Parse(Value);
+                    return StringToInt(Value);
                 } catch {
                     return 0;
                 }
@@ -243,7 +257,7 @@ namespace SmartHome
         public double GetNumberValue(double defaultValue = 0) {
             if (Type != ValueType.EMPTY) {
                 try {
-                    return double.Parse(Value);
+                    return StringToDouble(Value);
                 } catch {
                     return 0;
                 }
@@ -432,6 +446,50 @@ namespace SmartHome
             return tmp;
         }
 
+        ///////////////////////////////////////////////////////////////////////////////////////////
+        // Utils - functions
+        ///////////////////////////////////////////////////////////////////////////////////////////
+
+        /// <summary>
+        /// Convert a string into a double (take in account '.' and ',')
+        /// </summary>
+        /// <param name="str">String desired</param>
+        /// <returns>Double number of the string</returns>
+        static public double StringToDouble(string str) {
+            double d1, d2;
+            try {
+                d1 = double.Parse(str.Replace(',', '.'));
+            } catch {
+                d1 = 0;
+            }
+            try {
+                d2 = double.Parse(str.Replace('.', ','));
+            } catch {
+                d2 = 0;
+            }
+            if (d1 == d2) {
+                return d1;
+            } else if (d1 != 0) {
+                return d1;
+            } else {
+                return d2;
+            }
+        }
+        /// <summary>
+        /// Convert a string into an integer (take in account '.' and ',')
+        /// </summary>
+        /// <param name="str">String desired</param>
+        /// <returns>Integer number of the string</returns>
+        static public int StringToInt(string str) {
+            int i;
+            try {
+                i = Convert.ToInt32(StringToDouble(str));
+            } catch {
+                i = 0;
+            }
+            return i;
+        }
+
 
         ///////////////////////////////////////////////////////////////////////////////////////////
         // Protected - Token functions
@@ -607,7 +665,7 @@ namespace SmartHome
                                 max--;
                                 break;
                             case 'u':
-                                /* Four-hex-digits */
+                                /* Four-hex-digits: unicode char */
                                 // TODO: Implements Four-hex-digits for Escape Sequences full support
                                 break;
                         }
