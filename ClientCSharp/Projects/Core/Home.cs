@@ -378,37 +378,48 @@ namespace SmartHome
             JSON roomJSONRes = null;
             JSON alarmClockJSONRes = null;
             JSON actionJSONRes = null;
+            JSON hifiJSONRes = null;
             HomeRequest msg = new HomeRequest();
             HTTPRequest request;
             if (HomeIdentifier.Length > 0) { 
                 /* Get Home state from server by "maison" controller */
-                msg.Set("controller", "maison").Set("action", "getState").Set("dest", HomeIdentifier);
+                msg.Set("controller", "maison").Set("action", "getState").Set("dest", HomeIdentifier).Set("hifi");
                 request = new HTTPRequest(HomeURI, msg);
+				if (!(request.Execute())) return new HomeResponse();
                 HomeResponse homeStateRes = HomeResponse.Create(new JSON(request.GetResponse()));
                 JSON stateJSON = homeStateRes.Data.Get("state");
                 roomJSONRes = stateJSON.Get("pieces");
                 alarmClockJSONRes = stateJSON.Get("reveils");
                 actionJSONRes = stateJSON.Get("actions");
+                /* Check if hifi was retrieved */
+                if (stateJSON.Contains("songs")) {
+                    hifiJSONRes = stateJSON.Get("songs");
+                } else {
+                    /* Get Hifi state from server */
+                    msg.Clear().Set("controller", "hifi").Set("action", "lister");
+					request = new HTTPRequest(HomeURI, msg);
+					if (!(request.Execute())) return new HomeResponse();
+                    HomeResponse hifiRes = HomeResponse.Create(new JSON(request.GetResponse()));
+                    hifiJSONRes = hifiRes.Data.Get("songs");
+                }
                 /* Set return response */ 
                 returnRes = homeStateRes;
             } else {
                 /* Get Room state from server */
                 msg.Set("controller", "pieces").Set("action", "lister");
-                request = new HTTPRequest(HomeURI, msg);
+				request = new HTTPRequest(HomeURI, msg);
+				if (!(request.Execute())) return new HomeResponse();
                 HomeResponse roomRes = HomeResponse.Create(new JSON(request.GetResponse()));
                 roomJSONRes = roomRes.Data.Get("pieces");
                 /* Get Alarm clocks state from server */
                 msg.Set("controller", "reveil").Set("action", "lister");
-                request = new HTTPRequest(HomeURI, msg);
+				request = new HTTPRequest(HomeURI, msg);
+				if (!(request.Execute())) return new HomeResponse();
                 HomeResponse alarmClockRes = HomeResponse.Create(new JSON(request.GetResponse()));
                 alarmClockJSONRes = alarmClockRes.Data.Get("reveils");
                 /* Set return response */
                 returnRes = roomRes;
             }
-            /* Get Hifi state from server */
-            msg.Clear().Set("controller", "hifi").Set("action", "lister");
-            request = new HTTPRequest(HomeURI, msg);
-            HomeResponse hifiRes = HomeResponse.Create(new JSON(request.GetResponse()));
             /* Begin refresh */
             if (OnHomeUpdate != null) {
                 OnHomeUpdate(this, HomeUpdateKind.BeginUpdate);
@@ -418,7 +429,7 @@ namespace SmartHome
             /* Refresh alarm clocks */
             Reveils.Refresh(alarmClockJSONRes);
             /* Refresh hifi */
-            Hifi.Refresh(hifiRes.Data.Get("songs"));
+            Hifi.Refresh(hifiJSONRes);
             /* Refresh actions */
             Actions.Refresh(actionJSONRes);
             /* End refresh */
